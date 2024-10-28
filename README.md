@@ -12,7 +12,8 @@
   - `BACKUP_SOURCES`                需要备份的目录路径或者文件路径
 ### （3）手动执行脚本测试
 ```shell
-chmod +x 
+chmod +x git_sync_backup.sh
+./git_sync_backup.sh
 ```
 
 ### （4）添加定时任务
