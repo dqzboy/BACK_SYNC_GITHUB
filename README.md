@@ -3,7 +3,9 @@
 
 # 如何使用
 
-> 前提条件：1、创建GitHub仓库 2、创建GitHubToken，选择repo就可以了
+> 前提条件：
+  - **1、** 创建GitHub仓库
+  - **2、** 创建GitHubToken，给个pull、push权限即可
 
 ### （1）下载脚本到你的服务器
 
