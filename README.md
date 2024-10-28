@@ -12,7 +12,7 @@
 ### （2）修改脚本中的变量
 - 根据脚本中的注释，修改变量。主要修改的变量如下
   - `GIT_USER="your_username"`      请替换为你的GitHub用户名
-  - `GIT_TOKEN="GITHUB_TOKEN"`      GitHub Token，请通过环境变量传递
+  - `GIT_TOKEN="GITHUB_TOKEN"`      请替换为你的GitHub Token
   - `REPO_NAME="your_repository"`   请替换为你的GitHub仓库名称
   - `BACKUP_SOURCES`                需要备份的目录路径或者文件路径
 ### （3）手动执行脚本测试
