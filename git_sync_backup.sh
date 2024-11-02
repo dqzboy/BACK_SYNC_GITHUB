@@ -95,6 +95,7 @@ else
     
     # 更新仓库
     info "更新本地仓库的 ${SERVER_NAME} 目录..."
+    git config pull.rebase false  # 解决合并分支的问题
     git pull origin "$BRANCH"
     
     if [ $? -ne 0 ]; then
