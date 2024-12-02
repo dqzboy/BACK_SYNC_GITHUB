@@ -9,6 +9,7 @@
 # 
 #  ORGANIZATION: Ding Qinzheng
 #===============================================================================
+
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -50,7 +51,7 @@ BACKUP_DIR="/data/${REPO_NAME}_BAK"              # 备份目录
 SERVER_NAME="$(hostname -I | awk '{print $1}')"  # 自动获取服务器的IP作为标识
 SERVER_BACKUP_DIR="${BACKUP_DIR}/${SERVER_NAME}"
 
-# 备份数据路径，可以通过定义备份目录路径或者文件的名称
+# 备份数据路径
 BACKUP_SOURCES=(
     "/etc/passwd"
     "/etc/nginx/conf.d"
@@ -75,9 +76,6 @@ if [ ! -d "$BACKUP_DIR" ]; then
     git sparse-checkout init --cone
     git sparse-checkout set "$SERVER_NAME"
     
-    # 检出指定分支（已在 clone 时指定）
-    # git checkout "$BRANCH"  # 不再需要，因为在 clone 时已指定
-
     # 检查克隆是否成功
     if [ $? -ne 0 ]; then
         error "克隆仓库失败！请检查Token和网络连接。"
@@ -97,8 +95,13 @@ else
     git pull --rebase origin "$BRANCH"
     
     if [ $? -ne 0 ]; then
-        error "更新仓库失败！尝试自动合并失败。请手动检查仓库状态。"
-        exit 1
+        warning "更新仓库时发生冲突，尝试自动合并..."
+        git fetch origin "$BRANCH"
+        git merge origin/"$BRANCH"
+        if [ $? -ne 0 ]; then
+            error "自动合并失败，请手动解决冲突。"
+            exit 1
+        fi
     else
         success "仓库更新成功。"
     fi
@@ -130,8 +133,8 @@ for SRC in "${BACKUP_SOURCES[@]}"; do
     fi
 done
 
-# 进入服务器特定的备份目录
-cd "$SERVER_BACKUP_DIR" || { error "进入服务器备份目录失败！"; exit 1; }
+# 进入工作目录（确保在仓库根目录）
+cd "$BACKUP_DIR" || { error "进入备份目录失败！"; exit 1; }
 
 # 添加所有更改到暂存区（包括删除的文件）
 git add -A .
@@ -146,14 +149,36 @@ fi
 current_time=$(date "+%Y-%m-%d %H:%M:%S")
 git commit -m "Backup update: ${SERVER_NAME} - ${current_time}"
 
-# 推送到远程仓库
-info "推送到远程仓库..."
-git push origin "$BRANCH"
+# 推送到远程仓库的函数，带有自动重试逻辑
+push_changes() {
+    local max_retries=3
+    local attempt=1
 
-# 检查是否推送成功
-if [ $? -eq 0 ]; then
-    success "备份完成！${SERVER_NAME} 的文件已成功推送到GitHub仓库。"
-else
-    error "推送失败！请检查GitHub Token是否正确，或手动执行 'git pull --rebase origin $BRANCH' 以解决冲突。"
+    while [ $attempt -le $max_retries ]; do
+        info "第 $attempt 次尝试推送到远程仓库..."
+        git push origin "$BRANCH"
+        if [ $? -eq 0 ]; then
+            success "备份完成！${SERVER_NAME} 的文件已成功推送到GitHub仓库。"
+            return 0
+        else
+            warning "推送失败！尝试拉取远程更改并重新推送。"
+            git fetch origin "$BRANCH"
+            git merge origin/"$BRANCH"
+            if [ $? -ne 0 ]; then
+                error "自动合并失败，请手动解决冲突。"
+                return 1
+            fi
+            attempt=$((attempt + 1))
+        fi
+    done
+
+    error "推送失败次数达到上限，请检查仓库状态。"
+    return 1
+}
+
+# 调用推送函数
+push_changes
+
+if [ $? -ne 0 ]; then
     exit 1
 fi
