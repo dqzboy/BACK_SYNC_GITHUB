@@ -9,7 +9,6 @@
 # 
 #  ORGANIZATION: Ding Qinzheng
 #===============================================================================
-
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -47,8 +46,8 @@ REPO_URL="https://github.com/${GIT_USER}/${REPO_NAME}.git"
 BRANCH="main"                # 指定分支名称,默认main分支
 
 # 备份配置
-BACKUP_DIR="/data/${REPO_NAME}_BAK"              # 备份目录，这里可根据自己的情况自定义，也可以保持此处的内容
-SERVER_NAME="$(hostname -I | awk '{print $1}')"  # 自动获取服务器的IP作为标识，这里根据自己的情况自定义
+BACKUP_DIR="/data/${REPO_NAME}_BAK"              # 备份目录
+SERVER_NAME="$(hostname -I | awk '{print $1}')"  # 自动获取服务器的IP作为标识
 SERVER_BACKUP_DIR="${BACKUP_DIR}/${SERVER_NAME}"
 
 # 备份数据路径，可以通过定义备份目录路径或者文件的名称
@@ -67,7 +66,7 @@ fi
 # 检查备份目录是否存在，如果不存在则克隆仓库
 if [ ! -d "$BACKUP_DIR" ]; then
     info "备份目录不存在，正在克隆仓库的 ${SERVER_NAME} 目录..."
-    git clone --no-checkout --filter=blob:none --sparse "https://${GIT_TOKEN}@github.com/${GIT_USER}/${REPO_NAME}.git" "$BACKUP_DIR"
+    git clone --no-checkout --filter=blob:none --sparse -b "$BRANCH" "https://${GIT_TOKEN}@github.com/${GIT_USER}/${REPO_NAME}.git" "$BACKUP_DIR"
     
     # 进入克隆的目录
     cd "$BACKUP_DIR" || { error "进入备份目录失败！"; exit 1; }
@@ -76,9 +75,9 @@ if [ ! -d "$BACKUP_DIR" ]; then
     git sparse-checkout init --cone
     git sparse-checkout set "$SERVER_NAME"
     
-    # 检出指定分支
-    git checkout "$BRANCH"
-    
+    # 检出指定分支（已在 clone 时指定）
+    # git checkout "$BRANCH"  # 不再需要，因为在 clone 时已指定
+
     # 检查克隆是否成功
     if [ $? -ne 0 ]; then
         error "克隆仓库失败！请检查Token和网络连接。"
@@ -93,13 +92,12 @@ else
     # 确保当前是稀疏检出模式并包含 SERVER_NAME 目录
     git sparse-checkout set "$SERVER_NAME"
     
-    # 更新仓库
+    # 更新仓库并使用 rebase 策略
     info "更新本地仓库的 ${SERVER_NAME} 目录..."
-    git config pull.rebase false  # 解决合并分支的问题
-    git pull origin "$BRANCH"
+    git pull --rebase origin "$BRANCH"
     
     if [ $? -ne 0 ]; then
-        error "更新仓库失败！请检查网络连接或仓库状态。"
+        error "更新仓库失败！尝试自动合并失败。请手动检查仓库状态。"
         exit 1
     else
         success "仓库更新成功。"
@@ -156,6 +154,6 @@ git push origin "$BRANCH"
 if [ $? -eq 0 ]; then
     success "备份完成！${SERVER_NAME} 的文件已成功推送到GitHub仓库。"
 else
-    error "推送失败！请检查GitHub Token是否正确。"
+    error "推送失败！请检查GitHub Token是否正确，或手动执行 'git pull --rebase origin $BRANCH' 以解决冲突。"
     exit 1
 fi
