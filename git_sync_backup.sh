@@ -47,7 +47,7 @@ REPO_URL="https://github.com/${GIT_USER}/${REPO_NAME}.git"
 BRANCH="main"                # 指定分支名称,默认main分支
 
 # 备份配置
-BACKUP_DIR="/data/${REPO_NAME}_BAK"              # 备份目录
+BACKUP_DIR="/data/${REPO_NAME}"              
 SERVER_NAME="$(hostname -I | awk '{print $1}')"  # 自动获取服务器的IP作为标识
 SERVER_BACKUP_DIR="${BACKUP_DIR}/${SERVER_NAME}"
 
@@ -55,8 +55,14 @@ SERVER_BACKUP_DIR="${BACKUP_DIR}/${SERVER_NAME}"
 BACKUP_SOURCES=(
     "/etc/passwd"
     "/etc/nginx/conf.d"
-    # 在此处添加更多需要备份的路径
 )
+
+# 清理函数：清理所有未提交的更改和解决冲突
+cleanup_repo() {
+    git reset --hard
+    git clean -fd
+    info "已清理工作目录"
+}
 
 # 检查是否设置了GITHUB_TOKEN
 if [ -z "$GIT_TOKEN" ]; then
@@ -64,58 +70,48 @@ if [ -z "$GIT_TOKEN" ]; then
     exit 1
 fi
 
-# 检查备份目录是否存在，如果不存在则克隆仓库
+# 检查并创建日志文件目录
+LOG_DIR=$(dirname "$LOG_FILE")
+if [ ! -d "$LOG_DIR" ]; then
+    mkdir -p "$LOG_DIR"
+fi
+
+# 确保备份目录存在并更新
 if [ ! -d "$BACKUP_DIR" ]; then
-    info "备份目录不存在，正在克隆仓库的 ${SERVER_NAME} 目录..."
-    git clone --no-checkout --filter=blob:none --sparse -b "$BRANCH" "https://${GIT_TOKEN}@github.com/${GIT_USER}/${REPO_NAME}.git" "$BACKUP_DIR"
-    
-    # 进入克隆的目录
-    cd "$BACKUP_DIR" || { error "进入备份目录失败！"; exit 1; }
-    
-    # 设置稀疏检出
-    git sparse-checkout init --cone
-    git sparse-checkout set "$SERVER_NAME"
-    
-    # 检查克隆是否成功
+    info "备份目录不存在，正在克隆仓库..."
+    git clone -b "$BRANCH" "$REPO_URL" "$BACKUP_DIR"
     if [ $? -ne 0 ]; then
         error "克隆仓库失败！请检查Token和网络连接。"
         exit 1
-    else
-        success "仓库克隆成功。"
     fi
-else
-    # 进入工作目录
-    cd "$BACKUP_DIR" || { error "进入备份目录失败！"; exit 1; }
-    
-    # 确保当前是稀疏检出模式并包含 SERVER_NAME 目录
-    git sparse-checkout set "$SERVER_NAME"
-    
-    # 更新仓库并使用 rebase 策略
-    info "更新本地仓库的 ${SERVER_NAME} 目录..."
-    git pull --rebase origin "$BRANCH"
-    
-    if [ $? -ne 0 ]; then
-        warning "更新仓库时发生冲突，尝试自动合并..."
-        git fetch origin "$BRANCH"
-        git merge origin/"$BRANCH"
-        if [ $? -ne 0 ]; then
-            error "自动合并失败，请手动解决冲突。"
-            exit 1
-        fi
-    else
-        success "仓库更新成功。"
-    fi
+    success "仓库克隆成功。"
 fi
+
+# 进入工作目录
+cd "$BACKUP_DIR" || { error "进入备份目录失败！"; exit 1; }
 
 # 配置git用户信息
 git config user.name "$GIT_USER"
 git config user.email "${GIT_USER}@users.noreply.github.com"
 
+# 清理并更新仓库
+info "清理和更新本地仓库..."
+cleanup_repo
+
+# 确保禁用 sparse-checkout
+git config core.sparseCheckout false
+rm -f .git/info/sparse-checkout
+
+# 强制更新到最新状态
+git fetch origin
+git reset --hard origin/$BRANCH
+success "本地仓库已更新到最新状态"
+
 # 确保服务器备份目录存在
 mkdir -p "$SERVER_BACKUP_DIR"
 
-# 清空服务器特定的备份目录
-info "清理旧文件..."
+# 只清空当前服务器的备份目录，保留其他服务器的备份
+info "清理当前服务器的旧备份文件..."
 rm -rf "${SERVER_BACKUP_DIR:?}"/*
 
 # 拷贝新文件到服务器特定的备份目录
@@ -133,13 +129,8 @@ for SRC in "${BACKUP_SOURCES[@]}"; do
     fi
 done
 
-# 进入工作目录（确保在仓库根目录）
-cd "$BACKUP_DIR" || { error "进入备份目录失败！"; exit 1; }
-
-# 添加所有更改到暂存区（包括删除的文件）
-git add -A .
-
-# 检查是否有更改需要提交
+# 检查是否有文件被修改或添加
+git add --sparse "${SERVER_NAME}" 2>/dev/null || git add "${SERVER_NAME}"
 if git diff --cached --quiet; then
     info "没有发现新的更改，无需备份。"
     exit 0
@@ -156,23 +147,48 @@ push_changes() {
 
     while [ $attempt -le $max_retries ]; do
         info "第 $attempt 次尝试推送到远程仓库..."
-        git push origin "$BRANCH"
-        if [ $? -eq 0 ]; then
+        
+        # 先尝试获取最新更改
+        git fetch origin
+        
+        # 尝试变基到最新的远程分支
+        if ! git rebase origin/$BRANCH; then
+            warning "变基失败，正在中止变基操作..."
+            git rebase --abort
+            
+            # 如果变基失败，回到干净状态并强制使用最新的远程状态
+            cleanup_repo
+            git fetch origin
+            git reset --hard origin/$BRANCH
+            
+            # 重新应用我们的更改
+            info "重新应用本地更改..."
+            rm -rf "${SERVER_BACKUP_DIR:?}"/*
+            for SRC in "${BACKUP_SOURCES[@]}"; do
+                if [ -e "$SRC" ]; then
+                    cp -rf "$SRC" "$SERVER_BACKUP_DIR/"
+                fi
+            done
+            
+            git add "${SERVER_NAME}"
+            git commit -m "Backup update: ${SERVER_NAME} - ${current_time}"
+        fi
+        
+        # 尝试推送
+        if git push origin $BRANCH; then
             success "备份完成！${SERVER_NAME} 的文件已成功推送到GitHub仓库。"
             return 0
         else
-            warning "推送失败！尝试拉取远程更改并重新推送。"
-            git fetch origin "$BRANCH"
-            git merge origin/"$BRANCH"
-            if [ $? -ne 0 ]; then
-                error "自动合并失败，请手动解决冲突。"
+            if [ $attempt -eq $max_retries ]; then
+                error "推送失败次数达到上限，请检查仓库状态。"
                 return 1
             fi
+            warning "推送失败，将在5秒后重试..."
+            sleep 5
             attempt=$((attempt + 1))
         fi
     done
 
-    error "推送失败次数达到上限，请检查仓库状态。"
     return 1
 }
 
@@ -180,5 +196,6 @@ push_changes() {
 push_changes
 
 if [ $? -ne 0 ]; then
+    cleanup_repo
     exit 1
 fi
