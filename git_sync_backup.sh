@@ -51,7 +51,7 @@ BACKUP_DIR="/data/${REPO_NAME}"
 SERVER_NAME="$(hostname -I | awk '{print $1}')"  # 自动获取服务器的IP作为标识
 SERVER_BACKUP_DIR="${BACKUP_DIR}/${SERVER_NAME}"
 
-# 备份数据路径
+# 备份数据路径,下面为例子,根据您实际情况修改
 BACKUP_SOURCES=(
     "/etc/passwd"
     "/etc/nginx/conf.d"
