@@ -43,7 +43,7 @@ error() {
 GIT_USER="your_username"     # 请替换为你的GitHub用户名
 GIT_TOKEN="GITHUB_TOKEN"     # 请替换为你的GitHub Token
 REPO_NAME="your_repository"  # 请替换为你的GitHub仓库名称
-REPO_URL="https://github.com/${GIT_USER}/${REPO_NAME}.git"
+REPO_URL="https://${GIT_TOKEN}@github.com/${GIT_USER}/${REPO_NAME}.git"
 BRANCH="main"                # 指定分支名称,默认main分支
 
 # 备份配置
