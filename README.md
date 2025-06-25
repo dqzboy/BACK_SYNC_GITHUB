@@ -2,6 +2,29 @@
 在服务器中通过脚本并结合crontab定时备份数据到GitHub仓库，适用于个人
 
 ---
+<table style="width: 100%; table-layout: fixed;">
+    <tr>
+      <td width="50%" align="center"><b>海外服务器</b></td>
+      <td width="50%" align="center"><b>海外服务器</b></td>
+    </tr>
+    <tr>
+        <td width="50%" align="center">
+            <a href="https://dqzboy.github.io/proxyui/racknerd" target="_blank">
+                <img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/1.png?raw=true" 
+                     alt="RackNerd" 
+                     style="width: 100%; height: auto; max-width: 400px; object-fit: contain;">
+            </a>
+        </td>
+        <td width="50%" align="center">
+            <a href="https://app.cloudcone.com/?ref=12690" target="_blank">
+                <img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/2.png?raw=true" 
+                     alt="CloudCone" 
+                     style="width: 100%; height: auto; max-width: 400px; object-fit: contain;">
+            </a>
+        </td>
+    </tr>
+</table>
+
 ## 脚本逻辑：
 #### （1）克隆仓库或更新仓库
 - 克隆仓库：如果备份目录不存在，脚本会使用 `git clone` 克隆指定的 GitHub 仓库。
