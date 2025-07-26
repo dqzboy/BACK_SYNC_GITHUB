@@ -106,16 +106,6 @@ crontab -e
         </a>
       </td>
     </tr>
-    <tr>
-      <td width="50%" align="left">
-        <a href="https://www.thordata.com/?ls=VNSCxroa&lk=Docker-Proxy" target="_blank">Thordata 2M+ 原生静态住宅 IP，稳定且高匿名。助力合规、高效数据抓取。</a>
-      </td>
-      <td width="50%" align="center">
-        <a href="https://www.thordata.com/?ls=VNSCxroa&lk=Docker-Proxy" target="_blank">
-          <img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/Thordata_01.jpg?raw=true" alt="Thordata" width="200" height="200">
-        </a>
-      </td>
-    </tr>
   </tbody>
 </table>
 
