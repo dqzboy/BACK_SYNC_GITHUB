@@ -72,6 +72,10 @@ crontab -e
 0 2 * * * /your_path/git_sync_backup.sh
 ```
 
+## 问题总结
+#### 1、更新了Token后，执行脚本提示需要输入密码
+> 手动将服务器上备份目录下的`.git` 文件夹删除后，再次执行脚本
+
 ## 💌 推广
 
 <table>
@@ -82,30 +86,38 @@ crontab -e
     </tr>
   </thead>
   <tbody>
-    <!-- 第一个广告：RackNerd -->
     <tr>
       <td width="50%" align="left">
         <a href="https://dqzboy.github.io/proxyui/racknerd" target="_blank">提供高性价比的海外VPS，支持多种操作系统，适合搭建Docker代理服务。</a>
       </td>
       <td width="50%" align="center">
         <a href="https://dqzboy.github.io/proxyui/racknerd" target="_blank">
-          <img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/Image_2025-07-07_16-14-49.png?raw=true" alt="RackNerd" width="200" height="120">
+          <img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/Image_2025-07-07_16-14-49.png?raw=true" alt="RackNerd" width="200" height="150">
         </a>
       </td>
     </tr>
-    <!-- 第二个广告：CloudCone -->
     <tr>
       <td width="50%" align="left">
         <a href="https://dqzboy.github.io/proxyui/CloudCone" target="_blank">CloudCone 提供灵活的云服务器方案，支持按需付费，适合个人和企业用户。</a>
       </td>
       <td width="50%" align="center">
         <a href="https://dqzboy.github.io/proxyui/CloudCone" target="_blank">
-          <img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/111.png?raw=true" alt="CloudCone" width="200" height="120">
+          <img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/111.png?raw=true" alt="CloudCone" width="200" height="150">
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td width="50%" align="left">
+        <a href="https://www.thordata.com/?ls=VNSCxroa&lk=Docker-Proxy" target="_blank">Thordata 2M+ 原生静态住宅 IP，稳定且高匿名。助力合规、高效数据抓取。</a>
+      </td>
+      <td width="50%" align="center">
+        <a href="https://www.thordata.com/?ls=VNSCxroa&lk=Docker-Proxy" target="_blank">
+          <img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/Thordata_01.jpg?raw=true" alt="Thordata" width="200" height="200">
         </a>
       </td>
     </tr>
   </tbody>
 </table>
 
-##### *Telegram Bot: [点击联系](https://t.me/WiseAidBot)*
+##### *Telegram Bot: [点击联系](https://t.me/WiseAidBot) ｜ E-Mail: support@dqzboy.com*
 **仅接受长期稳定运营，信誉良好的商家*
