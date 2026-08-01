@@ -1,0 +1,8 @@
+server/data/
+web/node_modules/
+web/dist/
+
+# 操作系统 / 编辑器
+.DS_Store
+*.log
+.work*

@@ -1,23 +1,60 @@
 # BACK_SYNC_GITHUB
-在服务器中通过脚本并结合crontab定时备份数据到GitHub仓库，适用于个人
+在服务器中运行服务，在WEB管理界面设置备份文件和定时任务，实现定时备份数据到GitHub仓库
 
-## 脚本逻辑：
-#### （1）克隆仓库或更新仓库
-- 克隆仓库：如果备份目录不存在，脚本会使用 `git clone` 克隆指定的 GitHub 仓库。
-- 更新仓库：如果备份目录已存在，脚本会通过 `git pull` 更新本地仓库，确保本地仓库与远程仓库同步。
-  
-#### （2）备份文件处理
-- 清理旧文件：清空服务器特定的备份目录，确保只保留最新的备份。
-- 备份文件复制：遍历指定的文件和目录（如脚本中的示例为： `/etc/passwd` 和 `/etc/nginx/conf.d`），并将其复制到服务器特定的备份目录中。
-- 检查复制结果：如果复制失败，脚本会显示警告信息。
-#### （3）提交和推送更改到 GitHub
-- 添加更改到 Git：将备份目录下的所有更改（包括删除的文件）添加到 Git 的暂存区。
-- 提交更改：如果有更改（通过 `git diff --cached --quiet` 检查），则提交更改，提交信息包括当前时间。
-- 推送到远程仓库：将本地的备份更改推送到 GitHub 上的远程仓库，确保数据备份同步到远程仓库。
-- 多台服务器同时备份：推送被拒绝时自动处理，自动执行git fetch和git merge，然后重试推送，最大重试次数为3次(`max_retries=3`)。
+
+<br/>
+<table>
+    <tr>
+      <td width="50%" align="center"><b>仪表盘</b></td>
+      <td width="50%" align="center"><b>备份设置</b></td>
+    </tr>
+    <tr>
+        <td width="50%" align="center"><img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/picture/git_bak_sync-01.png?raw=true"></td>
+        <td width="50%" align="center"><img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/picture/git_bak_sync-02.png?raw=true"></td>
+    </tr>
+</table>
+
+## 运行方式
+
+### 1. 启动后端（默认 :8080）
+
+```bash
+cd server
+go mod tidy
+go run .            # 或 go build -o git-backup-server . && ./git-backup-server
+```
+
+首次启动会在 `server/data/app.db` 创建 SQLite 库并写入默认配置。
+默认管理员账号：**admin / admin**（请尽快在「备份配置」中修改）。
+
+### 2. 启动前端（开发模式，:5173）
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+打开 http://localhost:5173 ，前端已通过 Vite 代理把 `/api` 转发到 `:8080`。
+
+> 也可让 Go 直接托管前端构建产物：先 `cd web && npm run build`，
+> 再取消 `main.go` 中注释的 `r.Static` / `r.NoRoute` 两行，直接访问 `:8080` 即可。
+
+### 3. 使用流程
+
+1. 登录后进入「备份配置」，填写 GitHub 用户名、Token、仓库名、分支，以及要备份的源路径（如 `/etc/passwd`、`/etc/nginx/conf.d`）。
+2. 进入「执行备份」点击「开始备份」，后端会按当前配置执行备份，页面实时显示日志。
+3. 在「任务历史」可查看每次备份的结果与完整日志。
 
 ## 前提条件：
-  - **1、** 创建GitHub仓库，设置为私有
+
+<details open>
+<summary>点击展开 ...</summary>
+
+<div align="center">
+
+**1、** 创建GitHub仓库，设置为私有
+
 <table>
     <tr>
         <td width="50%" align="center"><img src="https://github.com/user-attachments/assets/f4b750c3-b4cd-48e0-8bc3-2313d45726dd"?raw=true"></td>
@@ -25,8 +62,7 @@
 </table>
 
 
-  
-  - **2、** 创建GitHubToken，给个pull、push权限即可
+**2、** 创建GitHubToken，给个pull、push权限即可
 <table>
     <tr>
         <td width="50%" align="center"><img src="https://github.com/user-attachments/assets/fc51040f-a7ea-4b9e-bc7e-c35469849674"?raw=true"></td>
@@ -43,38 +79,16 @@
     </tr>
 </table>
 
+</div>
+
+</details>
+
+
+
 **注意**：把Toekn保留下来，只会出现一次。下面修改脚本变量时需要使用到！
 
 ## 步骤流程：
-### （1）下载脚本到你的服务器
-```bash
-wget https://raw.githubusercontent.com/dqzboy/BACK_SYNC_GITHUB/refs/heads/main/git_sync_backup.sh
-```
 
-### （2）修改脚本中的变量
-- 根据脚本中的注释，修改变量。主要修改的变量如下
-  - `GIT_USER="your_username"`      请替换为你的GitHub用户名
-  - `GIT_TOKEN="GITHUB_TOKEN"`      请替换为你的GitHub Token
-  - `REPO_NAME="your_repository"`   请替换为你的GitHub仓库名称
-  - `BACKUP_SOURCES`                需要备份的目录路径或者文件路径
-### （3）手动执行脚本测试
-```shell
-chmod +x git_sync_backup.sh
-./git_sync_backup.sh
-```
-
-### （4）添加定时任务
-```shell
-# 定义定时任务
-crontab -e
-
-# 例如：每天2点执行备份
-0 2 * * * /your_path/git_sync_backup.sh
-```
-
-## 问题总结
-#### 1、更新了Token后，执行脚本提示需要输入密码
-> 手动将服务器上备份目录下的`.git` 文件夹删除后，再次执行脚本
 
 ## 💌 推广
 
