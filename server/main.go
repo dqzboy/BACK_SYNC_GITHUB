@@ -47,9 +47,9 @@ func main() {
 		}
 	}
 
-	// 如需由 Go 直接托管前端构建产物，取消下面两行注释并先 `npm run build`
-	// r.Static("/assets", "./web/dist/assets")
-	// r.NoRoute(func(c *gin.Context) { c.File("./web/dist/index.html") })
+	// 由 Go 直接托管内嵌的前端构建产物（SPA）：
+	// 启动后端即可在 :8080 访问前端页面，无需单独启动前端服务。
+	registerWebUI(r)
 
 	log.Println("Git 备份管理服务已启动: http://localhost:8080")
 	if err := r.Run(":8080"); err != nil {

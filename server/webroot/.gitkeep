@@ -1,0 +1,2 @@
+# 保留目录：Go embed 要求被嵌入的目录在编译期至少存在一个文件。
+# 前端构建产物（npm run build 的 web/dist）会复制到 server/webroot/dist 后内嵌进二进制。

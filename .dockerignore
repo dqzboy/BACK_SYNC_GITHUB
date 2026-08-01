@@ -1,0 +1,10 @@
+.git
+**/.git
+*.md
+*.log
+web/node_modules
+server/webroot/dist
+server/data
+server/git-backup-server
+git-backup-server
+dist

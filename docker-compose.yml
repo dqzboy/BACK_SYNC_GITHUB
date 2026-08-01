@@ -1,0 +1,10 @@
+services:
+  git-backup-web:
+    image: ghcr.io/dqzboy/back_sync_github:latest
+    container_name: git-backup-web
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # 持久化 SQLite 数据（默认管理员 admin/admin）
+      - ./data:/app/data

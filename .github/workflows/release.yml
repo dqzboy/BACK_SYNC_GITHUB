@@ -1,0 +1,148 @@
+name: Release
+
+# 触发条件：
+#   - 推送 tag（v 开头，如 v1.0.0）→ 构建并发布
+#   - 手动触发 workflow_dispatch → 仅构建镜像与二进制（不创建 Release）
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write      # 创建 Release / 上传附件
+  packages: write      # 推送镜像到 GHCR
+
+env:
+  APP_NAME: git-backup-server
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  # ============ 跨平台二进制文件 ============
+  binaries:
+    name: Build binary (${{ matrix.goos }}/${{ matrix.goarch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { goos: windows, goarch: amd64 }
+          - { goos: linux,   goarch: amd64 }
+          - { goos: linux,   goarch: arm64 }
+          - { goos: darwin,  goarch: amd64 }
+          - { goos: darwin,  goarch: arm64 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build frontend
+        run: |
+          cd web
+          npm ci
+          npm run build
+
+      - name: Copy frontend into server/webroot
+        run: |
+          rm -rf server/webroot/dist
+          mkdir -p server/webroot/dist
+          cp -r web/dist/. server/webroot/dist/
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: '0'
+        run: |
+          cd server
+          BIN="${{ env.APP_NAME }}"
+          if [ "${{ matrix.goos }}" = "windows" ]; then BIN="${BIN}.exe"; fi
+          go build -trimpath -ldflags="-s -w" -o "../dist/${BIN}" .
+
+      - name: Package artifact
+        run: |
+          VERSION="${GITHUB_REF_NAME:-dev}"
+          PKG="${{ env.APP_NAME }}-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
+          mkdir -p pkg
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            (cd dist && zip -r "../pkg/${PKG}.zip" "${{ env.APP_NAME }}.exe")
+          else
+            tar -czf "pkg/${PKG}.tar.gz" -C dist ${{ env.APP_NAME }}
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: pkg/*
+          if-no-files-found: error
+
+  # ============ 多架构 Docker 镜像 ============
+  docker:
+    name: Build & push multi-arch image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU (跨架构模拟)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{startsWith(github.ref, 'refs/tags/')}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============ 发布 GitHub Release ============
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: [binaries, docker]
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true

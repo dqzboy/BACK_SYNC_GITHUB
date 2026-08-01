@@ -16,31 +16,60 @@
 
 ## 运行方式
 
-### 1. 启动后端（默认 :8080）
+### 1. 一键构建并运行
 
 ```bash
-cd server
-go mod tidy
-go run .            # 或 go build -o git-backup-server . && ./git-backup-server
+./scripts/build.sh
+./git-backup-server 
 ```
 
-首次启动会在 `server/data/app.db` 创建 SQLite 库并写入默认配置。
+首次启动会在 `./data/app.db` 创建 SQLite 库并写入默认配置（二进制运行时数据目录为当前工作目录下的 `data/`）。
 默认管理员账号：**admin / admin**（请尽快在「备份配置」中修改）。
 
-### 2. 启动前端（开发模式，:5173）
+### 2. 开发模式
 
 ```bash
-cd web
-npm install
-npm run dev
+cd server && go run .
+cd web && npm install && npm run dev
 ```
 
-打开 http://localhost:5173 ，前端已通过 Vite 代理把 `/api` 转发到 `:8080`。
+打开 http://localhost:5173 进行前端开发调试。
 
-> 也可让 Go 直接托管前端构建产物：先 `cd web && npm run build`，
-> 再取消 `main.go` 中注释的 `r.Static` / `r.NoRoute` 两行，直接访问 `:8080` 即可。
+### 3. Docker 运行
 
-### 3. 使用流程
+- 支持 `linux/amd64` 与 `linux/arm64`，直接拉取运行即可：
+
+```bash
+# 拉取最新镜像
+docker pull ghcr.io/dqzboy/back_sync_github:latest
+
+# 运行（数据持久化到宿主机 ./data）
+docker run -d --name git-backup-web \
+  -p 8080:8080 \
+  -v "$(pwd)/data:/app/data" \
+  ghcr.io/dqzboy/back_sync_github:latest
+```
+
+启动后访问 http://localhost:8080 。默认管理员账号：**admin / admin**。
+
+### 4. Docker Compose 运行
+
+项目根目录已提供 `docker-compose.yml`，直接一键启动：
+
+```bash
+docker compose up -d
+```
+
+停止与清理：
+
+```bash
+docker compose down
+```
+
+如需指定版本，编辑 `docker-compose.yml` 中的 `image` 标签（如 `:v1.0.0`）。数据同样持久化在宿主机 `./data` 目录。
+
+
+### 5. 使用流程
 
 1. 登录后进入「备份配置」，填写 GitHub 用户名、Token、仓库名、分支，以及要备份的源路径（如 `/etc/passwd`、`/etc/nginx/conf.d`）。
 2. 进入「执行备份」点击「开始备份」，后端会按当前配置执行备份，页面实时显示日志。
@@ -85,7 +114,7 @@ npm run dev
 
 
 
-**注意**：把Toekn保留下来，只会出现一次。下面修改脚本变量时需要使用到！
+**注意**：把Toekn保留下来，只会出现一次。在后台配置时需要使用到！
 
 ## 步骤流程：
 
