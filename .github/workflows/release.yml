@@ -26,7 +26,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { goos: windows, goarch: amd64 }
           - { goos: linux,   goarch: amd64 }
           - { goos: linux,   goarch: arm64 }
           - { goos: darwin,  goarch: amd64 }
@@ -65,20 +64,14 @@ jobs:
           CGO_ENABLED: '0'
         run: |
           cd server
-          BIN="${{ env.APP_NAME }}"
-          if [ "${{ matrix.goos }}" = "windows" ]; then BIN="${BIN}.exe"; fi
-          go build -trimpath -ldflags="-s -w" -o "../dist/${BIN}" .
+          go build -trimpath -ldflags="-s -w" -o "../dist/${{ env.APP_NAME }}" .
 
       - name: Package artifact
         run: |
           VERSION="${GITHUB_REF_NAME:-dev}"
           PKG="${{ env.APP_NAME }}-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
           mkdir -p pkg
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            (cd dist && zip -r "../pkg/${PKG}.zip" "${{ env.APP_NAME }}.exe")
-          else
-            tar -czf "pkg/${PKG}.tar.gz" -C dist ${{ env.APP_NAME }}
-          fi
+          tar -czf "pkg/${PKG}.tar.gz" -C dist ${{ env.APP_NAME }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -115,7 +108,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable={{startsWith(github.ref, 'refs/tags/')}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
