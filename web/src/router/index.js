@@ -16,12 +16,12 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', redirect: '/dashboard' },
-      { path: 'dashboard', name: 'dashboard', component: Dashboard },
-      { path: 'config', name: 'config', component: Config },
-      { path: 'backup', name: 'backup', component: Backup },
-      { path: 'jobs', name: 'jobs', component: Jobs },
-      { path: 'users', name: 'users', component: Users },
-      { path: 'schedule', name: 'schedule', component: Schedule }
+      { path: 'dashboard', name: 'dashboard', component: Dashboard, meta: { title: 'nav.dashboard' } },
+      { path: 'config', name: 'config', component: Config, meta: { title: 'nav.config' } },
+      { path: 'backup', name: 'backup', component: Backup, meta: { title: 'nav.backup' } },
+      { path: 'jobs', name: 'jobs', component: Jobs, meta: { title: 'nav.jobs' } },
+      { path: 'users', name: 'users', component: Users, meta: { title: 'nav.users' } },
+      { path: 'schedule', name: 'schedule', component: Schedule, meta: { title: 'nav.schedule' } }
     ]
   }
 ]

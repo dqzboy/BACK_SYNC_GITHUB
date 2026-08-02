@@ -2,15 +2,15 @@
   <el-card class="ops-card">
     <template #header>
       <div style="display: flex; justify-content: space-between; align-items: center">
-        <span class="ops-card__title">执行备份</span>
-        <el-button type="primary" :icon="VideoPlay" :loading="running" @click="run">开始备份</el-button>
+        <span class="ops-card__title"><el-icon class="ops-card__icon"><Upload /></el-icon>{{ t('backup.title') }}</span>
+        <el-button type="primary" :icon="VideoPlay" :loading="running" @click="run">{{ t('backup.start') }}</el-button>
       </div>
     </template>
 
     <el-alert
       v-if="!currentJob"
       type="info"
-      title="点击「开始备份」将按当前配置，把备份源拷贝到以服务器 IP 命名的目录并提交推送到 GitHub 仓库"
+      :title="t('backup.info')"
       :closable="false"
     />
 
@@ -19,8 +19,8 @@
         <div class="ops-result-icon">{{ resultIcon(currentJob.status) }}</div>
         <div>
           <div class="ops-result-title">{{ statusText(currentJob.status) }}</div>
-          <div class="ops-result-sub">{{ currentJob.message || '任务进行中，请稍候…' }}</div>
-          <div class="ops-result-meta">任务 #{{ currentJob.id }} · 服务器 {{ currentJob.server_name }}</div>
+          <div class="ops-result-sub">{{ currentJob.message || t('backup.runningMsg') }}</div>
+          <div class="ops-result-meta">{{ t('backup.jobMeta', { id: currentJob.id, server: currentJob.server_name }) }}</div>
         </div>
       </div>
       <pre class="ops-log">{{ currentJob.log }}</pre>
@@ -31,15 +31,16 @@
 <script setup>
 import { ref, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { VideoPlay } from '@element-plus/icons-vue'
+import { VideoPlay, Upload } from '@element-plus/icons-vue'
 import api from '../api'
+import { t } from '../i18n'
 
 const running = ref(false)
 const currentJob = ref(null)
 let timer = null
 
 function statusText(s) {
-  return s === 'success' ? '备份成功' : s === 'failed' ? '备份失败' : s === 'running' ? '备份进行中' : '未知'
+  return s === 'success' ? t('backup.success') : s === 'failed' ? t('backup.failed') : s === 'running' ? t('backup.running') : t('backup.unknown')
 }
 function resultIcon(s) {
   return s === 'success' ? '✓' : s === 'failed' ? '✕' : '◌'
@@ -51,7 +52,7 @@ async function run() {
     const { data } = await api.post('/backup/run')
     poll(data.id)
   } catch (e) {
-    ElMessage.error(e.response?.data?.error || '启动失败')
+    ElMessage.error(e.response?.data?.error || t('backup.startError'))
     running.value = false
   }
 }

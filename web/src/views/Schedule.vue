@@ -1,55 +1,65 @@
 <template>
-  <el-card class="ops-card">
-    <template #header><span class="ops-card__title">定时任务</span></template>
+  <el-card class="ops-card" v-loading="loading" element-loading-background="transparent">
+    <template #header>
+      <span class="ops-card__title"><el-icon class="ops-card__icon"><Clock /></el-icon>{{ t('schedule.title') }}</span>
+    </template>
 
     <el-form :model="form" label-width="140px" style="max-width: 760px">
-      <div class="ops-section"><span>调度设置</span></div>
+      <div class="ops-section"><span>{{ t('schedule.section') }}</span></div>
 
-      <el-form-item label="启用定时备份">
+      <el-form-item :label="t('schedule.enabled')">
         <el-switch v-model="form.schedule_enabled" @change="clearNext" />
       </el-form-item>
 
-      <el-form-item label="执行频率">
+      <el-form-item :label="t('schedule.freq')">
         <el-select v-model="mode" style="width: 240px" @change="onModeChange">
-          <el-option label="每天固定时间" value="daily" />
-          <el-option label="每隔 N 小时" value="hourly" />
-          <el-option label="自定义 Cron" value="custom" />
+          <el-option :label="t('schedule.daily')" value="daily" />
+          <el-option :label="t('schedule.hourly')" value="hourly" />
+          <el-option :label="t('schedule.custom')" value="custom" />
         </el-select>
       </el-form-item>
 
-      <el-form-item v-if="mode === 'daily'" label="每日时间">
+      <el-form-item v-if="mode === 'daily'" :label="t('schedule.dailyTime')">
         <el-time-picker
           v-model="dailyTime"
           format="HH:mm"
           value-format="HH:mm"
-          placeholder="选择时间"
+          :placeholder="t('schedule.pickTime')"
           @change="rebuildCron"
         />
-        <span class="ops-hint">每天在该时刻执行一次备份</span>
+        <span class="ops-hint">{{ t('schedule.dailyHint') }}</span>
       </el-form-item>
 
-      <el-form-item v-if="mode === 'hourly'" label="间隔(小时)">
+      <el-form-item v-if="mode === 'hourly'" :label="t('schedule.interval')">
         <el-input-number v-model="hourInterval" :min="1" :max="24" @change="rebuildCron" />
-        <span class="ops-hint">每隔 {{ hourInterval }} 小时执行一次</span>
+        <span class="ops-hint">{{ t('schedule.hourlyHint', { n: hourInterval }) }}</span>
       </el-form-item>
 
-      <el-form-item v-if="mode === 'custom'" label="Cron 表达式">
-        <el-input v-model="form.schedule_cron" placeholder="分 时 日 月 周，例如 0 2 * * *" @input="clearNext" />
-        <span class="ops-hint">标准 5 段 Cron：分 时 日 月 周</span>
+      <el-form-item v-if="mode === 'custom'" :label="t('schedule.cronExpr')">
+        <el-input v-model="form.schedule_cron" :placeholder="t('schedule.cronPh')" @input="clearNext" />
+        <span class="ops-hint">{{ t('schedule.cronHint') }}</span>
       </el-form-item>
 
-      <el-form-item label="下次执行">
-        <el-tag v-if="nextRunText" type="success" effect="dark" class="ops-pill">{{ nextRunText }}</el-tag>
-        <el-tag v-else type="info" effect="plain" class="ops-pill">—</el-tag>
+      <el-form-item :label="t('schedule.next')">
+        <transition name="ops-next" mode="out-in">
+          <el-tag
+            v-if="nextRunText"
+            :key="'run'"
+            class="ops-pill ops-pill--success ops-pill--live"
+          >
+            <el-icon class="ops-pill__icon"><Calendar /></el-icon>{{ nextRunText }}
+          </el-tag>
+          <el-tag v-else :key="'none'" class="ops-pill ops-pill--idle">{{ t('common.none') }}</el-tag>
+        </transition>
       </el-form-item>
 
-      <el-form-item label="上次自动运行">
-        <span class="ops-muted">{{ form.schedule_last_run || '尚未执行' }}</span>
+      <el-form-item :label="t('schedule.lastRun')">
+        <span class="ops-muted">{{ form.schedule_last_run || t('schedule.neverRun') }}</span>
       </el-form-item>
 
       <el-form-item>
-        <el-button type="primary" :loading="saving" @click="save">保存设置</el-button>
-        <el-button :loading="testing" @click="testRun">立即测试运行</el-button>
+        <el-button type="primary" :loading="saving" @click="save">{{ t('schedule.save') }}</el-button>
+        <el-button :loading="testing" @click="testRun">{{ t('schedule.test') }}</el-button>
       </el-form-item>
     </el-form>
 
@@ -59,8 +69,8 @@
       type="success"
       :closable="false"
       show-icon
-      title="定时备份已开启"
-      :description="`Cron: ${form.schedule_cron}　|　服务端每 20 秒同步一次配置，无需重启。`"
+      :title="t('schedule.on')"
+      :description="t('schedule.onDesc', { cron: form.schedule_cron })"
     />
   </el-card>
 </template>
@@ -68,7 +78,9 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Clock, Calendar } from '@element-plus/icons-vue'
 import api from '../api'
+import { t } from '../i18n'
 
 const form = reactive({
   schedule_enabled: false,
@@ -80,6 +92,7 @@ const dailyTime = ref('02:00')
 const hourInterval = ref(2)
 const saving = ref(false)
 const testing = ref(false)
+const loading = ref(true)
 
 // 根据模式推导出 cron 表达式
 function rebuildCron() {
@@ -189,7 +202,9 @@ onMounted(async () => {
     form.schedule_last_run = data.schedule_last_run
     mode.value = inferMode(data.schedule_cron)
   } catch (e) {
-    ElMessage.error(e.response?.data?.error || '读取配置失败')
+    ElMessage.error(e.response?.data?.error || t('schedule.loadError'))
+  } finally {
+    loading.value = false
   }
 })
 
@@ -204,9 +219,9 @@ async function save() {
       schedule_cron: form.schedule_cron
     }
     await api.put('/config', payload)
-    ElMessage.success('定时设置已保存')
+    ElMessage.success(t('schedule.saved'))
   } catch (e) {
-    ElMessage.error(e.response?.data?.error || '保存失败')
+    ElMessage.error(e.response?.data?.error || t('schedule.saveError'))
   } finally {
     saving.value = false
   }
@@ -216,9 +231,9 @@ async function testRun() {
   testing.value = true
   try {
     const { data } = await api.post('/backup/run')
-    ElMessage.success(`已触发一次备份，任务 #${data.id}`)
+    ElMessage.success(t('schedule.triggered', { id: data.id }))
   } catch (e) {
-    ElMessage.error(e.response?.data?.error || '触发失败')
+    ElMessage.error(e.response?.data?.error || t('schedule.triggerError'))
   } finally {
     testing.value = false
   }
@@ -239,5 +254,28 @@ async function testRun() {
 }
 .ops-alert {
   margin-top: 8px;
+}
+.ops-pill__icon {
+  margin-right: 2px;
+  vertical-align: -1px;
+}
+/* subtle static cue that the value is "live" once scheduled backup is on */
+.ops-pill--live {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+/* enter/exit animation for the next-run preview (low-frequency toggle) */
+.ops-next-enter-active {
+  transition: opacity 0.32s cubic-bezier(0.2, 0, 0, 1), transform 0.32s cubic-bezier(0.2, 0, 0, 1);
+}
+.ops-next-leave-active {
+  transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1), transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.ops-next-enter-from {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.92);
+}
+.ops-next-leave-to {
+  opacity: 0;
+  transform: translateY(4px) scale(0.98);
 }
 </style>

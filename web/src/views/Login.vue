@@ -4,8 +4,8 @@
       <div class="ops-login-brand">
         <div class="ops-logo-mark">⎇</div>
         <div>
-          <div class="ops-brand-name">GIT·BACKUP</div>
-          <div class="ops-brand-sub">ops console</div>
+          <div class="ops-brand-name">{{ t('app.brand') }}</div>
+          <div class="ops-brand-sub">{{ t('app.sub') }}</div>
         </div>
       </div>
 
@@ -13,13 +13,13 @@
 
       <el-form :model="form">
         <el-form-item>
-          <el-input v-model="form.username" placeholder="用户名" :prefix-icon="User" size="large" />
+          <el-input v-model="form.username" :placeholder="t('login.usernamePh')" :prefix-icon="User" size="large" />
         </el-form-item>
         <el-form-item>
           <el-input
             v-model="form.password"
             type="password"
-            placeholder="密码"
+            :placeholder="t('login.passwordPh')"
             :prefix-icon="Lock"
             show-password
             size="large"
@@ -27,11 +27,11 @@
           />
         </el-form-item>
         <el-button type="primary" size="large" :loading="loading" class="ops-login-btn" @click="onSubmit">
-          登 录
+          {{ t('login.submit') }}
         </el-button>
       </el-form>
 
-      <div class="ops-login-hint">默认账号 admin / admin · 请尽快到「备份配置」修改</div>
+      <div class="ops-login-hint">{{ t('login.hint') }}</div>
     </div>
   </div>
 </template>
@@ -42,6 +42,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import api from '../api'
+import { t } from '../i18n'
 
 const router = useRouter()
 const form = ref({ username: '', password: '' })
@@ -55,7 +56,7 @@ async function onSubmit() {
     localStorage.setItem('username', form.value.username)
     router.push('/')
   } catch (e) {
-    ElMessage.error(e.response?.data?.error || '登录失败')
+    ElMessage.error(e.response?.data?.error || t('login.error'))
   } finally {
     loading.value = false
   }
