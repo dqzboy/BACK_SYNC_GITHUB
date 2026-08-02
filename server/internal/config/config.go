@@ -1,6 +1,9 @@
 package config
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"os"
+)
 
 // Config 系统配置（单例，id 固定为 1）
 type Config struct {
@@ -12,6 +15,7 @@ type Config struct {
 	BackupDir     string `json:"backup_dir"`
 	ServerName    string `json:"server_name"`
 	BackupSources string `json:"-"` // 以 JSON 数组字符串存储
+	HostRoot      string `json:"host_root"` // Docker 部署时宿主机根在容器内的挂载点（如 /host）
 	AdminUser     string `json:"admin_user"`
 	AdminPass     string `json:"admin_pass"`
 	JWTSecret     string `json:"-"`
@@ -58,4 +62,12 @@ func (c *Config) SetSources(s []string) error {
 	}
 	c.BackupSources = string(b)
 	return nil
+}
+
+// EffectiveHostRoot 返回实际生效的宿主机根映射：优先使用配置值，否则回退到环境变量 HOST_ROOT
+func (c Config) EffectiveHostRoot() string {
+	if c.HostRoot != "" {
+		return c.HostRoot
+	}
+	return os.Getenv("HOST_ROOT")
 }

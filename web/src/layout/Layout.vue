@@ -128,7 +128,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   DataLine, Setting, Upload, List, User, Clock, Sunny, Moon, ArrowDown, Select, Menu
@@ -171,16 +171,6 @@ const currentLangFlag = computed(() => (langMeta[locale.value] || langMeta['zh-C
 
 function onLang(code) {
   setLocale(code)
-  if (ttsState.enabled) narrate(t('tt.sample'), code)
-}
-function previewLang(code) {
-  const { speak } = useTTS()
-  speak(t('tt.sample'), code)
-}
-function onToggleTTS() {
-  const next = !ttsState.enabled
-  setEnabled(next)
-  if (next) narrate(t('tt.sample'))
 }
 function onToggle() {
   theme.value = toggleTheme()
@@ -192,14 +182,6 @@ function onCommand(cmd) {
     router.push('/login')
   }
 }
-
-// 切换页面时播报标题
-watch(
-  () => route.path,
-  () => {
-    if (ttsState.enabled) narrate(t(route.meta.title || 'app.name'))
-  }
-)
 
 onMounted(() => {
   if (typeof window !== 'undefined' && window.matchMedia) {
@@ -280,17 +262,6 @@ onBeforeUnmount(() => {
   transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 .ops-theme-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
-.ops-tts-btn {
-  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
-  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
-}
-.ops-tts-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
-.ops-tts-btn.is-on {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-  background: var(--accent-dim);
-  box-shadow: 0 0 0 3px var(--accent-dim);
-}
 .ops-user {
   display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text);
   font-family: var(--font-display); font-size: 13px; outline: none;
@@ -313,26 +284,17 @@ onBeforeUnmount(() => {
 .ops-lang-trigger:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
 .ops-lang-flag { font-size: 15px; line-height: 1; }
 .ops-lang-caret { font-size: 12px; color: var(--text-muted); }
-.ops-lang-menu { padding: 6px !important; min-width: 184px; }
+.ops-lang-menu { padding: 8px !important; min-width: 184px; }
 .ops-lang-menu-head {
   font-family: var(--font-display); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--text-muted); padding: 6px 12px 8px;
+  color: var(--text-muted); padding: 8px 12px 10px;
 }
-.ops-lang-menu .el-dropdown-menu__item { border-radius: 8px; padding: 0 10px; }
+.ops-lang-menu .el-dropdown-menu__item { border-radius: 8px; padding: 10px 12px; }
 .ops-lang-menu .el-dropdown-menu__item.is-active { background: var(--accent-dim) !important; color: var(--accent) !important; }
 .ops-lang-item { display: flex; align-items: center; gap: 8px; width: 100%; }
 .ops-lang-check { font-size: 14px; color: var(--accent); width: 16px; }
 .ops-lang-check--ph { visibility: hidden; }
 .ops-lang-name { flex: 1; font-family: var(--font-display); }
-.ops-lang-speak {
-  display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
-  border-radius: 7px; border: 1px solid transparent; background: transparent; color: var(--text-muted);
-  cursor: pointer; transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
-}
-.ops-lang-speak:hover {
-  color: var(--accent); background: var(--accent-dim);
-  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
-}
 
 /* ============================ 移动端 ============================ */
 .ops-menu-btn { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); }

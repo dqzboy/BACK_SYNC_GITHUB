@@ -67,6 +67,7 @@ func (m *Manager) execute(id uint, c config.Config) {
 		Branch:     c.Branch,
 		BackupDir:  c.BackupDir,
 		ServerName: c.ServerName,
+		HostRoot:   c.EffectiveHostRoot(),
 	}
 	if sources, err := c.Sources(); err == nil {
 		gcfg.BackupSources = sources

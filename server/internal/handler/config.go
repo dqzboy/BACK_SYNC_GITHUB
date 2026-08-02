@@ -30,6 +30,7 @@ func GetConfig(database *gorm.DB) gin.HandlerFunc {
 			"branch":            cfg.Branch,
 			"backup_dir":        cfg.BackupDir,
 			"server_name":       cfg.ServerName,
+			"host_root":         cfg.EffectiveHostRoot(),
 			"backup_sources":    sources,
 			"admin_user":        cfg.AdminUser,
 			"schedule_enabled":  cfg.ScheduleEnabled,
@@ -54,6 +55,7 @@ func UpdateConfig(database *gorm.DB) gin.HandlerFunc {
 		AdminPass     string   `json:"admin_pass"`
 		ScheduleEnabled bool   `json:"schedule_enabled"`
 		ScheduleCron    string `json:"schedule_cron"`
+		HostRoot        string `json:"host_root"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
@@ -90,6 +92,7 @@ func UpdateConfig(database *gorm.DB) gin.HandlerFunc {
 		}
 		cfg.ScheduleEnabled = body.ScheduleEnabled
 		cfg.ScheduleCron = body.ScheduleCron
+		cfg.HostRoot = body.HostRoot
 		if err := database.Save(&cfg).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "保存失败"})
 			return

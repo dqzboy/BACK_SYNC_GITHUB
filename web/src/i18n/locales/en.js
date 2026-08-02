@@ -66,7 +66,11 @@ export default {
     admin: 'Admin',
     sourcesL: 'Sources',
     notConfigured: 'Not configured',
-    tokenWarn: 'GitHub Token is not set. Please configure it in Backup Config before running a backup.'
+    tokenWarn: 'GitHub Token is not set. Please configure it in Backup Config before running a backup.',
+    distTitle: 'Job Status Distribution',
+    totalJobs: 'Total Jobs',
+    recentTitle: 'Recent Activity',
+    noJobs: 'No job records yet'
   },
   config: {
     title: 'Backup Config',
@@ -83,6 +87,9 @@ export default {
     sources: 'Source Paths',
     sourcePh: '/path/to/file_or_dir',
     addPath: 'Add Path',
+    hostRoot: 'Host Root Mapping',
+    hostRootPh: 'In Docker, set to /host; leave blank to use source paths directly',
+    hostRootHelp: 'In Docker, mount the host root into the container at /host (e.g. -v /:/host:ro), then set this to /host. Backup source paths can then be written without a prefix, matching the native binary experience.',
     save: 'Save Config',
     saved: 'Config saved',
     saveError: 'Save failed'
@@ -97,7 +104,9 @@ export default {
     failed: 'Backup failed',
     running: 'Backup running',
     unknown: 'Unknown',
-    startError: 'Failed to start'
+    startError: 'Failed to start',
+    doneSuccess: 'Backup finished: success',
+    doneFailed: 'Backup finished: failed'
   },
   schedule: {
     title: 'Schedule',
@@ -157,6 +166,7 @@ export default {
     editTitle: 'Edit User',
     createTitle: 'Add User',
     usernamePh: 'Login username',
+    password: 'Password',
     resetPwd: 'Reset Password',
     pwdPh: 'Enter password',
     pwdResetPh: 'Leave blank to keep unchanged',
@@ -172,12 +182,6 @@ export default {
     saveError: 'Save failed',
     delError: 'Delete failed',
     empty: 'No users yet'
-  },
-  tt: {
-    label: 'Voice',
-    on: 'Voice narration on',
-    off: 'Voice narration off',
-    sample: 'Git Backup System'
   },
   lang: {
     label: 'Language',

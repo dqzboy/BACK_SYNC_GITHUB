@@ -25,7 +25,7 @@
         </template>
       </el-table-column>
       <template #empty>
-        <span style="color: var(--text-muted)">{{ t('users.empty') }}</span>
+        <EmptyState :title="t('users.empty')" />
       </template>
     </el-table>
 
@@ -38,10 +38,10 @@
       destroy-on-close
     >
       <el-form :model="form" label-width="80px">
-        <el-form-item :label="t('users.username')">
+        <el-form-item :label="t('users.username')" required>
           <el-input v-model="form.username" :disabled="editing" :placeholder="t('users.usernamePh')" />
         </el-form-item>
-        <el-form-item :label="editing ? t('users.resetPwd') : t('users.password')">
+        <el-form-item :label="editing ? t('users.resetPwd') : t('users.password')" :required="!editing">
           <el-input
             v-model="form.password"
             type="password"
@@ -68,6 +68,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, User } from '@element-plus/icons-vue'
+import EmptyState from '../components/EmptyState.vue'
 import api from '../api'
 import { t } from '../i18n'
 

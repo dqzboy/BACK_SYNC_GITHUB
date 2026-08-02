@@ -8,3 +8,8 @@ services:
     volumes:
       # 持久化 SQLite 数据（默认管理员 admin/admin）
       - ./data:/app/data
+      # 把宿主机整棵目录树只读挂到容器 /host
+      - /:/host:ro
+    # 与上面的 /host 挂载配套：告诉程序宿主机根在容器内的位置
+    environment:
+      - HOST_ROOT=/host

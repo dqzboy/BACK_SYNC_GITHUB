@@ -20,7 +20,7 @@
         </template>
       </el-table-column>
       <template #empty>
-        <span style="color: var(--text-muted)">{{ t('jobs.empty') }}</span>
+        <EmptyState :title="t('jobs.empty')" />
       </template>
     </el-table>
 
@@ -33,6 +33,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { List } from '@element-plus/icons-vue'
+import EmptyState from '../components/EmptyState.vue'
 import api from '../api'
 import { t } from '../i18n'
 

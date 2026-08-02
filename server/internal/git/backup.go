@@ -20,6 +20,7 @@ type Config struct {
 	BackupDir     string
 	ServerName    string
 	BackupSources []string
+	HostRoot      string
 }
 
 // Logger 日志回调：level 取值 INFO/SUCCESS/WARNING/ERROR/GIT
@@ -123,15 +124,20 @@ func copyPath(src, dst string) error {
 	return copyFile(src, dst)
 }
 
-func copySources(sources []string, serverBackupDir string, log Logger) {
+func copySources(sources []string, hostRoot, serverBackupDir string, log Logger) {
 	for _, src := range sources {
 		src = strings.TrimSpace(src)
 		if src == "" {
 			continue
 		}
-		if _, err := os.Stat(src); err == nil {
+		// Docker 部署时把宿主机根挂到容器的 hostRoot（如 /host），此处自动拼成容器内真实路径
+		resolved := src
+		if hostRoot != "" {
+			resolved = filepath.Join(hostRoot, src)
+		}
+		if _, err := os.Stat(resolved); err == nil {
 			dst := filepath.Join(serverBackupDir, filepath.Base(src))
-			if err := copyPath(src, dst); err != nil {
+			if err := copyPath(resolved, dst); err != nil {
 				log("WARNING", fmt.Sprintf("复制失败: %s -> %v", src, err))
 			} else {
 				log("INFO", "成功复制: "+src)
@@ -197,7 +203,7 @@ func Run(cfg Config, log Logger) error {
 	log("INFO", "已清理当前服务器的旧备份文件")
 
 	// 5. 拷贝新文件
-	copySources(cfg.BackupSources, serverBackupDir, log)
+	copySources(cfg.BackupSources, cfg.HostRoot, serverBackupDir, log)
 
 	// 6. 检查变更并提交
 	_ = runGit(backupDir, log, "add", cfg.ServerName)
@@ -227,7 +233,7 @@ func Run(cfg Config, log Logger) error {
 			for _, e := range entries {
 				_ = os.RemoveAll(filepath.Join(serverBackupDir, e.Name()))
 			}
-			copySources(cfg.BackupSources, serverBackupDir, log)
+			copySources(cfg.BackupSources, cfg.HostRoot, serverBackupDir, log)
 			_ = runGit(backupDir, log, "add", cfg.ServerName)
 			_ = runGit(backupDir, log, "commit", "-m", commitMsg)
 		}

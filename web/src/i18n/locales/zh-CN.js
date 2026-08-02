@@ -66,7 +66,11 @@ export default {
     admin: '管理员',
     sourcesL: '备份源',
     notConfigured: '未配置',
-    tokenWarn: '尚未配置 GitHub Token，请先到「备份配置」页面填写后再执行备份'
+    tokenWarn: '尚未配置 GitHub Token，请先到「备份配置」页面填写后再执行备份',
+    distTitle: '任务状态分布',
+    totalJobs: '任务总数',
+    recentTitle: '近期活动',
+    noJobs: '暂无任务记录'
   },
   config: {
     title: '备份配置',
@@ -83,6 +87,9 @@ export default {
     sources: '备份源路径',
     sourcePh: '/path/to/file_or_dir',
     addPath: '添加路径',
+    hostRoot: '宿主机根路径映射',
+    hostRootPh: 'Docker 部署时填 /host，留空则直接按源路径读取',
+    hostRootHelp: 'Docker 部署时，请将宿主机根目录只读挂载到容器的 /host（如 -v /:/host:ro），此处填 /host 后，备份源路径无需加前缀，体验与二进制直接运行一致。',
     save: '保存配置',
     saved: '配置已保存',
     saveError: '保存失败'
@@ -97,7 +104,9 @@ export default {
     failed: '备份失败',
     running: '备份进行中',
     unknown: '未知',
-    startError: '启动失败'
+    startError: '启动失败',
+    doneSuccess: '备份完成：成功',
+    doneFailed: '备份完成：失败'
   },
   schedule: {
     title: '定时任务',
@@ -157,6 +166,7 @@ export default {
     editTitle: '编辑用户',
     createTitle: '新增用户',
     usernamePh: '登录用户名',
+    password: '密码',
     resetPwd: '重置密码',
     pwdPh: '请输入密码',
     pwdResetPh: '留空则不修改',
@@ -172,12 +182,6 @@ export default {
     saveError: '保存失败',
     delError: '删除失败',
     empty: '暂无用户'
-  },
-  tt: {
-    label: '语音播报',
-    on: '语音播报已开启',
-    off: '语音播报已关闭',
-    sample: 'Git 备份管理系统'
   },
   lang: {
     label: '语言',

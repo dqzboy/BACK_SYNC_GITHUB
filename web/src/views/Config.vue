@@ -5,13 +5,13 @@
     </template>
     <el-form :model="form" label-width="140px" style="max-width: 760px">
       <div class="ops-section"><span>{{ t('config.sectionRepo') }}</span></div>
-      <el-form-item :label="t('config.gitUser')">
+      <el-form-item :label="t('config.gitUser')" required>
         <el-input v-model="form.git_user" />
       </el-form-item>
-      <el-form-item :label="t('config.gitToken')">
+      <el-form-item :label="t('config.gitToken')" required>
         <el-input v-model="form.git_token" type="password" show-password :placeholder="t('config.tokenPh')" />
       </el-form-item>
-      <el-form-item :label="t('config.repoName')">
+      <el-form-item :label="t('config.repoName')" required>
         <el-input v-model="form.repo_name" />
       </el-form-item>
       <el-form-item :label="t('config.branch')">
@@ -19,11 +19,15 @@
       </el-form-item>
 
       <div class="ops-section"><span>{{ t('config.sectionBackup') }}</span></div>
-      <el-form-item :label="t('config.backupDir')">
+      <el-form-item :label="t('config.backupDir')" required>
         <el-input v-model="form.backup_dir" />
       </el-form-item>
       <el-form-item :label="t('config.serverName')">
         <el-input v-model="form.server_name" :placeholder="t('config.serverNamePh')" />
+      </el-form-item>
+      <el-form-item :label="t('config.hostRoot')">
+        <el-input v-model="form.host_root" :placeholder="t('config.hostRootPh')" />
+        <div style="font-size: 12px; color: var(--el-text-color-secondary); margin-top: 6px; line-height: 1.5">{{ t('config.hostRootHelp') }}</div>
       </el-form-item>
       <el-form-item :label="t('config.sources')">
         <div style="width: 100%">
@@ -56,6 +60,7 @@ const form = ref({
   branch: '',
   backup_dir: '',
   server_name: '',
+  host_root: '',
   backup_sources: []
 })
 const saving = ref(false)

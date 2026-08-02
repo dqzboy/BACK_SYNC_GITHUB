@@ -5,8 +5,8 @@
    ========================================================================= */
 
 :root {
-  --font-display: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-body: 'Fira Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Fira Code', ui-monospace, SFMono-Regular, 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, 'PingFang SC', 'Microsoft YaHei', monospace;
+  --font-body: 'Fira Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --el-font-family: var(--font-body);
   --el-border-radius-base: 10px;
   /* 禁用所有弹出层箭头 */
@@ -440,3 +440,52 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Tooltip 文字色修正：上面统一覆盖 .el-popper 背景为 surface 时，会把深色 tooltip 的文字也衬成浅色，导致白底白字看不见 */
+.el-tooltip__popper {
+  color: var(--text) !important;
+}
+
+/* ============================ 操作反馈 Toast（ElMessage）主题化 ============================ */
+.el-message {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.45) !important;
+}
+.el-message .el-message__content { color: var(--text) !important; font-family: var(--font-body); }
+.el-message .el-message__closeBtn,
+.el-message.is-closable .el-message__closeBtn { color: var(--text-muted); }
+.el-message .el-message__closeBtn:hover { color: var(--text); }
+.el-message--success .el-message__icon { color: var(--accent); }
+.el-message--error .el-message__icon { color: var(--danger); }
+.el-message--warning .el-message__icon { color: var(--warn); }
+
+/* ============================ 跨浏览器滚动条（Firefox） ============================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* ============================ 移动端触控目标 ≥ 44px ============================ */
+.ops-side .el-menu-item { min-height: 46px; }
+.ops-theme-btn, .ops-menu-btn { width: 36px; height: 36px; }
+.ops-lang-trigger { min-height: 36px; }
+@media (max-width: 860px) {
+  .ops-theme-btn, .ops-menu-btn, .ops-lang-trigger { width: 40px; height: 40px; }
+  .ops-side .el-menu-item { min-height: 48px; }
+  .ops-header-right { gap: 10px; }
+}
+
+/* ============================ Header 右侧按钮统一规范 ============================ */
+/* 语言/主题/用户入口统一为 36px 圆角控件，视觉一致 */
+.ops-theme-btn { border-radius: 10px; }
+.ops-user { min-height: 36px; padding: 0 4px; border-radius: 999px; transition: background-color 0.2s ease; }
+.ops-user:hover { background: var(--surface-2); }
+.ops-header-right { gap: 12px; }
+
+/* ============================ 深色模式 accent 可读性增强 ============================ */
+[data-theme='dark'] .ops-section { text-shadow: 0 0 10px var(--accent-glow); }
+[data-theme='dark'] .ops-card__icon { filter: drop-shadow(0 0 6px var(--accent-glow)); }
+[data-theme='dark'] .ops-logo-mark { box-shadow: 0 0 22px -2px var(--accent-glow); }
+[data-theme='dark'] .ops-pill--success { box-shadow: 0 0 10px -2px var(--accent-glow); }

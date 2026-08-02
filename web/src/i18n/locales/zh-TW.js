@@ -66,7 +66,11 @@ export default {
     admin: '管理員',
     sourcesL: '備份來源',
     notConfigured: '未設定',
-    tokenWarn: '尚未設定 GitHub Token，請先至「備份設定」頁面填寫後再執行備份'
+    tokenWarn: '尚未設定 GitHub Token，請先至「備份設定」頁面填寫後再執行備份',
+    distTitle: '任務狀態分布',
+    totalJobs: '任務總數',
+    recentTitle: '近期活動',
+    noJobs: '暫無任務記錄'
   },
   config: {
     title: '備份設定',
@@ -83,6 +87,9 @@ export default {
     sources: '備份來源路徑',
     sourcePh: '/path/to/file_or_dir',
     addPath: '新增路徑',
+    hostRoot: '宿主機根路徑映射',
+    hostRootPh: 'Docker 部署時填 /host，留空則直接按來源路徑讀取',
+    hostRootHelp: 'Docker 部署時，請把宿主機根目錄唯讀掛載到容器的 /host（如 -v /:/host:ro），此處填 /host 後，備份來源路徑無需加前綴，體驗與二進位直接運行一致。',
     save: '儲存設定',
     saved: '設定已儲存',
     saveError: '儲存失敗'
@@ -97,7 +104,9 @@ export default {
     failed: '備份失敗',
     running: '備份進行中',
     unknown: '未知',
-    startError: '啟動失敗'
+    startError: '啟動失敗',
+    doneSuccess: '備份完成：成功',
+    doneFailed: '備份完成：失敗'
   },
   schedule: {
     title: '定時任務',
@@ -157,6 +166,7 @@ export default {
     editTitle: '編輯用戶',
     createTitle: '新增用戶',
     usernamePh: '登入使用者名稱',
+    password: '密碼',
     resetPwd: '重設密碼',
     pwdPh: '請輸入密碼',
     pwdResetPh: '留空則不修改',
@@ -172,12 +182,6 @@ export default {
     saveError: '儲存失敗',
     delError: '刪除失敗',
     empty: '暫無用戶'
-  },
-  tt: {
-    label: '語音播報',
-    on: '語音播報已開啟',
-    off: '語音播報已關閉',
-    sample: 'Git 備份管理系統'
   },
   lang: {
     label: '語言',

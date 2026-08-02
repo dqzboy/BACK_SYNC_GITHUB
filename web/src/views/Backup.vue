@@ -66,6 +66,8 @@ function poll(id) {
         running.value = false
         clearInterval(timer)
         timer = null
+        if (data.status === 'success') ElMessage.success(t('backup.doneSuccess'))
+        else if (data.status === 'failed') ElMessage.error(t('backup.doneFailed'))
       }
     } catch (e) {
       /* 忽略轮询错误 */
