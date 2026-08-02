@@ -72,9 +72,6 @@ docker compose down
 
 容器有独立的文件系统隔离，默认看不到宿主机的 `/etc`、`/var/www` 等目录。要像二进制直接运行那样在「备份配置」里填写**真实路径**（如 `/etc/nginx/conf.d`），需要把宿主机根目录挂进容器并启用路径映射：
 
-1. 编辑 `docker-compose.yml`，取消 `volumes` 里 `- /:/host:ro` 的注释（macOS 需先在 Docker Desktop 的 **Settings → Resources → File Sharing** 加入 `/`），并在 `environment` 中启用 `HOST_ROOT=/host`。
-2. 重启容器：`docker compose up -d`。
-3. 在 Web「备份配置」中，「宿主机根路径映射」填 `/host`（也可留空，程序会自动读取 `HOST_ROOT` 环境变量）；备份源路径直接填真实路径即可，无需写 `/host` 前缀。
 
 > 提示：`- /:/host:ro` 以只读方式把整棵宿主机目录树挂到容器 `/host`，一次覆盖所有分散目录，无需逐个挂载；只读挂载可避免备份程序误改宿主机文件。
 
